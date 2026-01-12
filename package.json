@@ -1,0 +1,23 @@
+{
+  "name": "flip-chess-memory",
+  "version": "1.0.0",
+  "description": "Premium 3D-style Memory Game with Hexagonal Board",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "start:electron": "electron .",
+    "package-win": "electron-packager . FlipChessMemory --platform=win32 --arch=x64 --out=dist --overwrite"
+  },
+  "keywords": [],
+  "author": "Antigravity",
+  "license": "ISC",
+  "dependencies": {
+    "canvas-confetti": "^1.9.4",
+    "express": "^5.2.1",
+    "socket.io": "^4.8.3"
+  },
+  "devDependencies": {
+    "electron": "^33.2.1",
+    "electron-packager": "^17.1.2"
+  }
+}
