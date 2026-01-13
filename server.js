@@ -103,39 +103,50 @@ function checkMatch(roomId) {
     const room = rooms[roomId];
     if (!room) return;
 
-    const [idx1, idx2] = room.flippedTokens;
-    const val1 = room.board[idx1];
-    const val2 = room.board[idx2];
-
-    if (val1 === val2) {
-        // Match!
-        room.scores[room.currentPlayer]++;
-        room.matchesFound++;
-
-        // Mark as permanently matched
-        room.matchedTokens.add(idx1);
-        room.matchedTokens.add(idx2);
-
-        room.flippedTokens = [];
-
-        io.to(roomId).emit('match_found', {
-            indices: [idx1, idx2],
-            scores: room.scores,
-            matchesFound: room.matchesFound
-        });
-
-        if (room.matchesFound === 32) {
-            io.to(roomId).emit('game_over', { scores: room.scores });
+    try {
+        // Validate we actually have 2 tokens to check
+        if (!room.flippedTokens || room.flippedTokens.length !== 2) {
+            // Unexpected state: reset and return
+            room.flippedTokens = [];
+            return;
         }
-    } else {
-        // No match
-        room.flippedTokens = [];
-        room.currentPlayer = room.currentPlayer === 0 ? 1 : 0;
 
-        io.to(roomId).emit('no_match', {
-            indices: [idx1, idx2],
-            nextPlayer: room.currentPlayer
-        });
+        const [idx1, idx2] = room.flippedTokens;
+        const val1 = room.board[idx1];
+        const val2 = room.board[idx2];
+
+        if (val1 === val2) {
+            // Match!
+            room.scores[room.currentPlayer]++;
+            room.matchesFound++;
+
+            // Mark as permanently matched
+            room.matchedTokens.add(idx1);
+            room.matchedTokens.add(idx2);
+
+            io.to(roomId).emit('match_found', {
+                indices: [idx1, idx2],
+                scores: room.scores,
+                matchesFound: room.matchesFound
+            });
+
+            if (room.matchesFound === 32) {
+                io.to(roomId).emit('game_over', { scores: room.scores });
+            }
+        } else {
+            // No match
+            room.currentPlayer = room.currentPlayer === 0 ? 1 : 0;
+
+            io.to(roomId).emit('no_match', {
+                indices: [idx1, idx2],
+                nextPlayer: room.currentPlayer
+            });
+        }
+    } catch (error) {
+        console.error(`Error in checkMatch for room ${roomId}:`, error);
+    } finally {
+        // CRITICAL: Always unlock the board
+        room.flippedTokens = [];
     }
 }
 
